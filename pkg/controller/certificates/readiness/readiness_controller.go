@@ -195,9 +195,27 @@ func (c *controller) ProcessItem(ctx context.Context, key types.NamespacedName) 
 		crt.Status.RenewalTime = nil
 	}
 	if !apiequality.Semantic.DeepEqual(oldCrt.Status, crt.Status) {
+		// Create safe string representations for logging to avoid nil pointer dereferences
+		var notAfterStr, notBeforeStr, renewalTimeStr string
+		if crt.Status.NotAfter != nil {
+			notAfterStr = crt.Status.NotAfter.String()
+		} else {
+			notAfterStr = "<nil>"
+		}
+		if crt.Status.NotBefore != nil {
+			notBeforeStr = crt.Status.NotBefore.String()
+		} else {
+			notBeforeStr = "<nil>"
+		}
+		if crt.Status.RenewalTime != nil {
+			renewalTimeStr = crt.Status.RenewalTime.String()
+		} else {
+			renewalTimeStr = "<nil>"
+		}
+
 		log.V(logf.DebugLevel).Info("updating status fields", "notAfter",
-			crt.Status.NotAfter, "notBefore", crt.Status.NotBefore, "renewalTime",
-			crt.Status.RenewalTime)
+			notAfterStr, "notBefore", notBeforeStr, "renewalTime",
+			renewalTimeStr)
 		return c.updateOrApplyStatus(ctx, crt)
 	}
 	return nil

@@ -241,6 +241,19 @@ func TestProcessItem(t *testing.T) {
 			secretShouldExist: true,
 			certShouldUpdate:  false,
 		},
+		"should safely log nil status fields without panicking": {
+			condition: cmapi.CertificateCondition{
+				Type:               cmapi.CertificateConditionReady,
+				Status:             cmmeta.ConditionFalse,
+				Reason:             "some reason",
+				Message:            "some message",
+				LastTransitionTime: &metaNow,
+			},
+			cert:             gen.CertificateFrom(cert),
+			certShouldUpdate: true,
+			// Explicitly not setting notAfter, notBefore, renewalTime to ensure they're nil
+			// This test case specifically covers the bug fix for nil pointer dereferences in logging
+		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
